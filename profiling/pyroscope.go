@@ -10,16 +10,6 @@ import (
 	"github.com/linnemanlabs/go-core/xerrors"
 )
 
-type Options struct {
-	Enabled              bool
-	AppName              string
-	ServerAddress        string
-	TenantID             string
-	Tags                 map[string]string
-	ProfileMutexFraction int
-	BlockProfileRate     int
-}
-
 func Start(ctx context.Context, opts *Options) (func(), error) {
 	L := log.FromContext(ctx)
 
