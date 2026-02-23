@@ -9,7 +9,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus/collectors"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 
-	"github.com/keithlinneman/linnemanlabs-web/internal/version"
+	"github.com/linnemanlabs/go-core/version"
 )
 
 type ServerMetrics struct {

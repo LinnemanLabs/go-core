@@ -10,7 +10,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	dto "github.com/prometheus/client_model/go"
 
-	"github.com/keithlinneman/linnemanlabs-web/internal/version"
+	"github.com/linnemanlabs/go-core/version"
 )
 
 // New
