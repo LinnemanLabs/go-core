@@ -12,16 +12,6 @@ import (
 	semconv "go.opentelemetry.io/otel/semconv/v1.26.0"
 )
 
-type Options struct {
-	Enabled   bool
-	Endpoint  string
-	Insecure  bool
-	Sample    float64
-	Service   string
-	Component string
-	Version   string
-}
-
 func Init(ctx context.Context, o *Options) (func(context.Context) error, error) {
 	if !o.Enabled {
 		otel.SetTracerProvider(sdktrace.NewTracerProvider())
