@@ -2,10 +2,10 @@ package version
 
 import "runtime/debug"
 
-const AppName = "linnemanlabs-web"
-
-// set via -ldflags at build time
+// set via -ldflags at build time, except appname and component which come from main()
 var (
+	AppName    = "none"
+	Component  = "none"
 	Version    = "dev"
 	Commit     = "none"
 	CommitDate string
@@ -43,6 +43,7 @@ var (
 
 type Info struct {
 	AppName    string `json:"app_name"`
+	Component  string `json:"component"`
 	Version    string `json:"version"`
 	Commit     string `json:"commit"`
 	CommitDate string `json:"commit_date"`
@@ -66,6 +67,7 @@ type Info struct {
 func Get() Info {
 	out := Info{
 		AppName:    AppName,
+		Component:  Component,
 		Version:    Version,
 		Commit:     Commit,
 		CommitDate: CommitDate,
@@ -134,7 +136,6 @@ func applyBuildInfo(out *Info, settings []debug.BuildSetting) {
 }
 
 // HasProvenance returns whether this binary has ci injected provenance
-// used for conditional attestation fetching at startup
 func (i *Info) HasProvenance() bool {
 	return i.ReleaseId != "" && i.EvidenceBucket != ""
 }
