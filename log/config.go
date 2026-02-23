@@ -50,3 +50,16 @@ func (c *Config) Validate() error {
 	}
 	return nil
 }
+
+func (c *Config) ToOptions(app string) *Options {
+	lvl, _ := ParseLevel(c.Level)
+	stLvl, _ := ParseLevel(c.StacktraceLevel)
+	return &Options{
+		App:               app,
+		Level:             lvl,
+		StacktraceLevel:   stLvl,
+		JsonFormat:        c.JsonFormat,
+		IncludeErrorLinks: c.IncludeErrorLinks,
+		MaxErrorLinks:     c.MaxErrorLinks,
+	}
+}
