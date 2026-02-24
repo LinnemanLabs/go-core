@@ -69,15 +69,13 @@ func (c *Config) Validate() error {
 	return nil
 }
 
-func (c *Config) ToOptions(app string, tags map[string]string) *Options {
+func (c *Config) ToOptions() *Options {
 
 	return &Options{
 		Enabled:              c.EnablePyroscope,
-		AppName:              app,
 		ProfileMutexFraction: c.ProfileMutexFraction,
 		BlockProfileRate:     c.BlockProfileRate,
 		ServerAddress:        c.PyroServer,
 		TenantID:             c.PyroTenantID,
-		Tags:                 tags,
 	}
 }
