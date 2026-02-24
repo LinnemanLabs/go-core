@@ -145,20 +145,6 @@ func TestIncHttpPanic(t *testing.T) {
 	}
 }
 
-// IncRateLimitDenied
-
-func TestIncRateLimitDenied(t *testing.T) {
-	m := New()
-
-	m.IncRateLimitDenied()
-	m.IncRateLimitDenied()
-
-	val := counterValue(t, m.reg, "http_requests_rate_limited_total")
-	if val != 2 {
-		t.Fatalf("http_requests_rate_limited_total = %f, want 2", val)
-	}
-}
-
 // SetBuildInfoFromVersion
 
 func TestSetBuildInfoFromVersion(t *testing.T) {
@@ -245,8 +231,6 @@ func TestHandler_ReflectsCounterIncrements(t *testing.T) {
 	m := New()
 
 	m.IncHttpPanic()
-	m.IncRateLimitDenied()
-	m.IncRateLimitDenied()
 
 	rec := httptest.NewRecorder()
 	req := httptest.NewRequest(http.MethodGet, "/metrics", http.NoBody)
@@ -256,9 +240,7 @@ func TestHandler_ReflectsCounterIncrements(t *testing.T) {
 	if !strings.Contains(body, "http_panic_total") {
 		t.Fatal("http_panic_total missing from /metrics output")
 	}
-	if !strings.Contains(body, "http_requests_rate_limited_total") {
-		t.Fatal("rate limited total missing from /metrics output")
-	}
+
 }
 
 // Isolation - each New() gets its own registry
@@ -297,7 +279,6 @@ func TestHandler_FullScrape(t *testing.T) {
 	dirty := false
 	m.SetBuildInfoFromVersion("test", "test", &version.Info{Version: "test", VCSDirty: &dirty})
 	m.IncHttpPanic()
-	m.IncRateLimitDenied()
 
 	rec := httptest.NewRecorder()
 	req := httptest.NewRequest(http.MethodGet, "/metrics", http.NoBody)
@@ -381,98 +362,6 @@ func TestNew_ResponseSizeBuckets(t *testing.T) {
 	}
 }
 
-// Watcher metrics
-
-func TestIncWatcherPolls(t *testing.T) {
-	m := New()
-	m.IncWatcherPolls()
-	m.IncWatcherPolls()
-
-	val := counterValue(t, m.reg, "content_watcher_polls_total")
-	if val != 2 {
-		t.Fatalf("content_watcher_polls_total = %f, want 2", val)
-	}
-}
-
-func TestIncWatcherSwaps(t *testing.T) {
-	m := New()
-	m.IncWatcherSwaps()
-
-	val := counterValue(t, m.reg, "content_watcher_swaps_total")
-	if val != 1 {
-		t.Fatalf("content_watcher_swaps_total = %f, want 1", val)
-	}
-}
-
-func TestIncWatcherError(t *testing.T) {
-	m := New()
-	m.IncWatcherError("ssm")
-	m.IncWatcherError("ssm")
-	m.IncWatcherError("load")
-
-	f := gatherMetric(t, m.reg, "content_watcher_errors_total")
-	if f == nil {
-		t.Fatal("content_watcher_errors_total not found")
-	}
-	// Should have 2 distinct label sets
-	if len(f.GetMetric()) != 2 {
-		t.Fatalf("expected 2 error type combos, got %d", len(f.GetMetric()))
-	}
-}
-
-func TestObserveBundleLoadDuration(t *testing.T) {
-	m := New()
-	m.ObserveBundleLoadDuration(1.5)
-	m.ObserveBundleLoadDuration(2.5)
-
-	count := histogramCount(t, m.reg, "content_bundle_load_duration_seconds")
-	if count != 2 {
-		t.Fatalf("content_bundle_load_duration_seconds count = %d, want 2", count)
-	}
-}
-
-func TestSetWatcherLastSuccess(t *testing.T) {
-	m := New()
-	m.SetWatcherLastSuccess(1700000000)
-
-	f := gatherMetric(t, m.reg, "content_watcher_last_success_timestamp_seconds")
-	if f == nil {
-		t.Fatal("content_watcher_last_success_timestamp_seconds not found")
-	}
-	val := f.GetMetric()[0].GetGauge().GetValue()
-	if val != 1700000000 {
-		t.Fatalf("value = %f, want 1700000000", val)
-	}
-}
-
-func TestSetProfilingActive_True(t *testing.T) {
-	m := New()
-	m.SetProfilingActive(true)
-
-	f := gatherMetric(t, m.reg, "profiling_active")
-	if f == nil {
-		t.Fatal("profiling_active metric not found")
-	}
-	val := f.GetMetric()[0].GetGauge().GetValue()
-	if val != 1 {
-		t.Fatalf("profiling_active = %f, want 1", val)
-	}
-}
-
-func TestSetProfilingActive_False(t *testing.T) {
-	m := New()
-	m.SetProfilingActive(false)
-
-	f := gatherMetric(t, m.reg, "profiling_active")
-	if f == nil {
-		t.Fatal("profiling_active metric not found")
-	}
-	val := f.GetMetric()[0].GetGauge().GetValue()
-	if val != 0 {
-		t.Fatalf("profiling_active = %f, want 0", val)
-	}
-}
-
 // 5xx error counter
 
 func TestMiddleware_5xxIncrementsErrorCounter(t *testing.T) {
@@ -516,40 +405,4 @@ func TestMiddleware_200DoesNotIncrementErrorCounter(t *testing.T) {
 	if f != nil {
 		t.Fatal("http_errors_total should not be present after 200 response")
 	}
-}
-
-// Watcher stale gauge
-
-func TestSetWatcherStale_True(t *testing.T) {
-	m := New()
-	m.SetWatcherStale(true)
-
-	f := gatherMetric(t, m.reg, "content_watcher_stale")
-	if f == nil {
-		t.Fatal("content_watcher_stale metric not found")
-	}
-	val := f.GetMetric()[0].GetGauge().GetValue()
-	if val != 1 {
-		t.Fatalf("content_watcher_stale = %f, want 1", val)
-	}
-}
-
-func TestSetWatcherStale_False(t *testing.T) {
-	m := New()
-	m.SetWatcherStale(false)
-
-	f := gatherMetric(t, m.reg, "content_watcher_stale")
-	if f == nil {
-		t.Fatal("content_watcher_stale metric not found")
-	}
-	val := f.GetMetric()[0].GetGauge().GetValue()
-	if val != 0 {
-		t.Fatalf("content_watcher_stale = %f, want 0", val)
-	}
-}
-
-func TestSetContentBundle(t *testing.T) {
-	m := New()
-	m.SetContentBundle("abc123")
-	m.SetContentBundle("def456") // verify Reset doesn't panic on second call
 }
